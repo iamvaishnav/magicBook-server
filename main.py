@@ -1,6 +1,9 @@
 from flask import Flask
 from flask_restful import Api, Resource, reqparse, abort, marshal_with, fields
 from flask_sqlalchemy import SQLAlchemy
+from datetime import date
+from datetime import datetime
+
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
@@ -9,11 +12,15 @@ api = Api(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 db = SQLAlchemy(app)
 
+from datetime import datetime
+
 
 class JournelModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     body = db.Column(db.String)
+    date = db.Column(db.String)
+    time = db.Column(db.String)
 
 
 db.create_all()
@@ -28,11 +35,14 @@ bot_args.add_argument("input", type=str, help="input")
 resource_fields = {
     'id': fields.Integer,
     'name': fields.String,
-    'body': fields.String
+    'body': fields.String,
+    'date': fields.String,
+    'time': fields.String
 }
 
 
 class Model(Resource):
+
     @marshal_with(resource_fields)
     def get(self, model_id):
         result = JournelModel.query.filter_by(id=model_id).first()
@@ -47,7 +57,8 @@ class Model(Resource):
         if result:
             abort(409, message="id taken...")
 
-        model = JournelModel(id=model_id, name=args['name'], body=args['body'])
+        model = JournelModel(id=model_id, name=args['name'], body=args['body'], date=date.today(),
+                             time=datetime.now().strftime("%H:%M:%S"))
         db.session.add(model)
         db.session.commit()
         return 201, model
@@ -64,5 +75,16 @@ class Model(Resource):
 
 api.add_resource(Model, "/model/<int:model_id>")
 
+
+class Model_all(Resource):
+
+    @marshal_with(resource_fields)
+    def get(self):
+        result = JournelModel.query.all()
+        return result
+
+
+api.add_resource(Model_all, "/model")
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="localhost")
