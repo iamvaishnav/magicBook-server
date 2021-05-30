@@ -55,22 +55,6 @@ class Model(Resource):
         return result
 
     @marshal_with(resource_fields)
-    def put(self, model_id):
-        args = model_put_args.parse_args()
-        result = JournelModel.query.filter_by(id=model_id).first()
-        if result:
-            abort(409, message="id taken...")
-        conversation_1.add_user_input(args['body'])
-        output = str(conversational_pipeline([conversation_1])).splitlines()[-1].replace('bot >>', '')
-
-        model = JournelModel(id=model_id, name=args['name'], body=args['body'], date=date.today(),
-                             time=datetime.now().strftime("%H:%M:%S"), bot_output=output)
-
-        db.session.add(model)
-        db.session.commit()
-        return 201
-
-    @marshal_with(resource_fields)
     def delete(self, model_id):
         result = JournelModel.query.filter_by(id=model_id).first()
         if not result:
@@ -90,6 +74,18 @@ class Model_all(Resource):
         result = JournelModel.query.all()
         return result
 
+    @marshal_with(resource_fields)
+    def post(self):
+        args = model_put_args.parse_args()
+        conversation_1.add_user_input(args['body'])
+        output = str(conversational_pipeline([conversation_1])).splitlines()[-1].replace('bot >>', '')
+
+        model = JournelModel(name=args['name'], body=args['body'], date=date.today(),
+                             time=datetime.now().strftime("%H:%M:%S"), bot_output=output )
+
+        db.session.add(model)
+        db.session.commit()
+        return 201
 
 api.add_resource(Model_all, "/model")
 
