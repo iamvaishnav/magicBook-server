@@ -64,7 +64,7 @@ class Model(Resource):
         output = str(conversational_pipeline([conversation_1])).splitlines()[-1].replace('bot >>', '')
 
         model = JournelModel(id=model_id, name=args['name'], body=args['body'], date=date.today(),
-                             time=datetime.now().strftime("%H:%M:%S"), bot_output = output)
+                             time=datetime.now().strftime("%H:%M:%S"), bot_output=output)
 
         db.session.add(model)
         db.session.commit()
