@@ -94,4 +94,4 @@ class Model_all(Resource):
 api.add_resource(Model_all, "/model")
 
 if __name__ == "__main__":
-    app.run(host="localhost")
+    app.run()
